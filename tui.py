@@ -10,9 +10,9 @@ class CallbookApp(App):
     """SSA Callbook TUI Application."""
 
     CSS = """
-    Screen { layout: grid; grid-size: 1 2; }
+    Screen { layout: vertical; }
     #search_bar { height: 3; margin: 1; }
-    #results { margin: 1; }
+    #results { height: 100%; margin: 1; }
     DataTable { height: 100%; }
     """
 
