@@ -10,9 +10,10 @@ class CallbookApp(App):
     """SSA Callbook TUI Application."""
 
     CSS = """
-    Screen { layout: grid; grid-size: 1; }
-    #search_bar { height: auto; margin: 1; }
+    Screen { layout: grid; grid-size: 1 2; }
+    #search_bar { height: 3; margin: 1; }
     #results { margin: 1; }
+    DataTable { height: 100%; }
     """
 
     BINDINGS = [
@@ -31,7 +32,7 @@ class CallbookApp(App):
         yield Header()
         with Container(id="search_bar"):
             yield Input(
-                placeholder=f"Search (Press Enter) - Type: {self.search_type}",
+                placeholder=f"Search (Enter) - Type: {self.search_type}",
                 id="the_input",
             )
         with Container(id="results"):
@@ -107,7 +108,7 @@ class CallbookApp(App):
 
     def update_placeholder(self) -> None:
         input_widget = self.query_one("#the_input", Input)
-        input_widget.placeholder = f"Search (Press Enter) - Type: {self.search_type}"
+        input_widget.placeholder = f"Search (Enter) - Type: {self.search_type}"
 
     def action_quit(self) -> None:
         self.exit()
