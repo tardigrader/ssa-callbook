@@ -114,16 +114,20 @@ class CallbookApp(App):
         """Explicit search action bound to Enter."""
         self.perform_search()
 
-    @work(exclusive=True)
-    async def perform_search(self) -> None:
+    def perform_search(self) -> None:
         """Perform the search."""
+        search_input = self.query_one("#search_input", Input)
+        query = search_input.value.strip()
+
+        if not query:
+            self.notify("Please enter a search term", severity="warning")
+            return
+
+        # Convert to uppercase for callsign searches
+        if self.current_search_type == "call":
+            query = query.upper()
+
         try:
-            search_input = self.query_one("#search_input", Input)
-            query = search_input.value.strip()
-
-            if not query:
-                return
-
             table = self.query_one("#results_table", DataTable)
             table.clear()
 
@@ -139,21 +143,23 @@ class CallbookApp(App):
                 results = main.search(ort=query)
             else:
                 results = []
+
+            self.last_results = results
+
+            for result in results:
+                callsign = result.get("callsign", "")
+                name = result.get("name", "")
+                city = result.get("city", "")
+                status = result.get("member_status", "Unknown")
+                table.add_row(callsign, name, city, status)
+
+            if not results:
+                self.notify("No results found", severity="warning")
+
         except main.NoResultsError:
             self.notify("No results found", severity="warning")
-            return
         except Exception as e:
             self.notify(f"Error: {e}", severity="error")
-            return
-
-        self.last_results = results
-
-        for result in results:
-            callsign = result.get("callsign", "")
-            name = result.get("name", "")
-            city = result.get("city", "")
-            status = result.get("member_status", "Unknown")
-            table.add_row(callsign, name, city, status)
 
     def action_search_call(self) -> None:
         """Search by callsign."""
