@@ -2,7 +2,6 @@ from textual.app import App, ComposeResult
 from textual.containers import Container
 from textual.widgets import Header, Footer, Input, DataTable
 from textual.binding import Binding
-from textual.command import Command, CommandPalette
 
 import main
 
@@ -22,7 +21,6 @@ class CallbookApp(App):
         Binding("f", "set_first", "First"),
         Binding("l", "set_last", "Last"),
         Binding("y", "set_city", "City"),
-        Binding("ctrl+k", "command_palette", "Command"),
     ]
 
     def __init__(self):
@@ -90,21 +88,22 @@ class CallbookApp(App):
         except Exception as e:
             self.notify(f"Error: {e}")
 
-    def action_set_call(self) -> None:
-        self.search_type = "call"
+    def set_search_type(self, search_type: str) -> None:
+        self.search_type = search_type
         self.update_placeholder()
+        self.query_one("#the_input", Input).focus()
+
+    def action_set_call(self) -> None:
+        self.set_search_type("call")
 
     def action_set_first(self) -> None:
-        self.search_type = "first"
-        self.update_placeholder()
+        self.set_search_type("first")
 
     def action_set_last(self) -> None:
-        self.search_type = "last"
-        self.update_placeholder()
+        self.set_search_type("last")
 
     def action_set_city(self) -> None:
-        self.search_type = "city"
-        self.update_placeholder()
+        self.set_search_type("city")
 
     def update_placeholder(self) -> None:
         input_widget = self.query_one("#the_input", Input)
@@ -112,26 +111,6 @@ class CallbookApp(App):
 
     def action_quit(self) -> None:
         self.exit()
-
-    def get_commands(self) -> list[Command]:
-        return [
-            Command(
-                "Search by Callsign",
-                "Set search type to callsign",
-                self.action_set_call,
-            ),
-            Command(
-                "Search by First Name",
-                "Set search type to first name",
-                self.action_set_first,
-            ),
-            Command(
-                "Search by Last Name",
-                "Set search type to last name",
-                self.action_set_last,
-            ),
-            Command("Search by City", "Set search type to city", self.action_set_city),
-        ]
 
 
 def run_tui():
