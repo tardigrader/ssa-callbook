@@ -3,6 +3,7 @@ from textual.containers import Container, Horizontal, Vertical
 from textual.widgets import Header, Footer, Static, Input, Button, DataTable
 from textual.binding import Binding
 from textual import work
+from textual.events import Key
 
 import main
 
@@ -11,7 +12,19 @@ class SearchPanel(Static):
     """Search input panel."""
 
     def compose(self) -> ComposeResult:
-        yield Input(placeholder="Enter callsign, name, or city...", id="search_input")
+        yield Input(
+            placeholder="Enter callsign, name, or city and press Enter...",
+            id="search_input",
+            submit_on_empty=False,
+        )
+        yield Horizontal(
+            Button("Callsign", id="btn_call", variant="primary"),
+            Button("First Name", id="btn_fnamn"),
+            Button("Last Name", id="btn_enamn"),
+            Button("City", id="btn_ort"),
+            Button("Search", id="btn_search", variant="success"),
+            id="search_buttons",
+        )
         yield Horizontal(
             Button("Callsign", id="btn_call", variant="primary"),
             Button("First Name", id="btn_fnamn"),
@@ -60,6 +73,7 @@ class CallbookApp(App):
         Binding("o", "search_ort", "City", show=True),
         Binding("r", "refresh", "Refresh", show=True),
         Binding("d", "distance", "Distance", show=True),
+        Binding("enter", "do_search", "Search", show=False),
     ]
 
     def __init__(self):
@@ -92,27 +106,37 @@ class CallbookApp(App):
             self.current_search_type = "enamn"
         elif button_id == "btn_ort":
             self.current_search_type = "ort"
+        elif button_id == "btn_search":
+            pass  # Just do search with current type
         self.perform_search()
+
+    def on_input_changed(self, event: Input.Changed) -> None:
+        """Handle input change - just to make sure events are working."""
+        pass
 
     def on_input_submitted(self, event: Input.Submitted) -> None:
         """Handle input submission."""
         self.perform_search()
 
+    def action_do_search(self) -> None:
+        """Explicit search action bound to Enter."""
+        self.perform_search()
+
     @work(exclusive=True)
     async def perform_search(self) -> None:
         """Perform the search."""
-        search_input = self.query_one("#search_input", Input)
-        query = search_input.value.strip()
-
-        if not query:
-            return
-
-        table = self.query_one("#results_table", DataTable)
-        table.clear()
-
-        self.last_results = []
-
         try:
+            search_input = self.query_one("#search_input", Input)
+            query = search_input.value.strip()
+
+            if not query:
+                return
+
+            table = self.query_one("#results_table", DataTable)
+            table.clear()
+
+            self.last_results = []
+
             if self.current_search_type == "call":
                 results = main.search(call=query)
             elif self.current_search_type == "fnamn":
