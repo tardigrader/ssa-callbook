@@ -1,6 +1,6 @@
 from textual.app import App, ComposeResult
-from textual.containers import Container, Horizontal
-from textual.widgets import Header, Footer, Input, Button, DataTable
+from textual.containers import Container
+from textual.widgets import Header, Footer, Input, DataTable
 from textual.binding import Binding
 
 import main
@@ -34,9 +34,6 @@ class CallbookApp(App):
                 placeholder=f"Search (Press Enter) - Type: {self.search_type}",
                 id="the_input",
             )
-            yield Horizontal(
-                Button("Search", variant="primary", id="do_search"),
-            )
         with Container(id="results"):
             yield DataTable(id="results_table")
         yield Footer()
@@ -49,10 +46,6 @@ class CallbookApp(App):
 
     def on_input_submitted(self, event: Input.Submitted) -> None:
         self.do_search()
-
-    def on_button_pressed(self, event: Button.Pressed) -> None:
-        if event.button.id == "do_search":
-            self.do_search()
 
     def do_search(self) -> None:
         input_widget = self.query_one("#the_input", Input)
