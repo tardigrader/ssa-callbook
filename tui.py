@@ -13,9 +13,8 @@ class SearchPanel(Static):
 
     def compose(self) -> ComposeResult:
         yield Input(
-            placeholder="Enter callsign, name, or city and press Enter...",
+            placeholder="Enter callsign, name, or city and click Search",
             id="search_input",
-            submit_on_empty=False,
         )
         yield Horizontal(
             Button("Callsign", id="btn_call", variant="primary"),
@@ -23,13 +22,6 @@ class SearchPanel(Static):
             Button("Last Name", id="btn_enamn"),
             Button("City", id="btn_ort"),
             Button("Search", id="btn_search", variant="success"),
-            id="search_buttons",
-        )
-        yield Horizontal(
-            Button("Callsign", id="btn_call", variant="primary"),
-            Button("First Name", id="btn_fnamn"),
-            Button("Last Name", id="btn_enamn"),
-            Button("City", id="btn_ort"),
             id="search_buttons",
         )
 
