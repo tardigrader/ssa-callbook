@@ -419,8 +419,17 @@ Examples:
         metavar=("LOC1", "LOC2"),
         help="Calculate distance between two callsigns or locators (e.g., SA2NTA SM2OAE or JP94VC KP03ER)",
     )
+    parser.add_argument(
+        "-t", "--tui", action="store_true", help="Launch interactive TUI"
+    )
 
     args = parser.parse_args()
+
+    if args.tui:
+        from tui import run_tui
+
+        run_tui()
+        sys.exit(0)
 
     if args.distance:
         loc1, loc2 = args.distance
