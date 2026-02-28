@@ -2,6 +2,7 @@ from textual.app import App, ComposeResult
 from textual.containers import Container
 from textual.widgets import Header, Footer, Input, DataTable
 from textual.binding import Binding
+from textual.command import Command, CommandPalette
 
 import main
 
@@ -18,9 +19,10 @@ class CallbookApp(App):
     BINDINGS = [
         Binding("q", "quit", "Quit"),
         Binding("c", "set_call", "Call"),
-        Binding("f", "set_fnamn", "First"),
-        Binding("e", "set_enamn", "Last"),
-        Binding("o", "set_ort", "City"),
+        Binding("f", "set_first", "First"),
+        Binding("l", "set_last", "Last"),
+        Binding("y", "set_city", "City"),
+        Binding("ctrl+k", "command_palette", "Command"),
     ]
 
     def __init__(self):
@@ -61,11 +63,11 @@ class CallbookApp(App):
         try:
             if self.search_type == "call":
                 results = main.search(call=query)
-            elif self.search_type == "fnamn":
+            elif self.search_type == "first":
                 results = main.search(fnamn=query)
-            elif self.search_type == "enamn":
+            elif self.search_type == "last":
                 results = main.search(enamn=query)
-            elif self.search_type == "ort":
+            elif self.search_type == "city":
                 results = main.search(ort=query)
             else:
                 results = []
@@ -92,25 +94,44 @@ class CallbookApp(App):
         self.search_type = "call"
         self.update_placeholder()
 
-    def action_set_fnamn(self) -> None:
-        self.search_type = "fnamn"
+    def action_set_first(self) -> None:
+        self.search_type = "first"
         self.update_placeholder()
 
-    def action_set_enamn(self) -> None:
-        self.search_type = "enamn"
+    def action_set_last(self) -> None:
+        self.search_type = "last"
         self.update_placeholder()
 
-    def action_set_ort(self) -> None:
-        self.search_type = "ort"
+    def action_set_city(self) -> None:
+        self.search_type = "city"
         self.update_placeholder()
 
     def update_placeholder(self) -> None:
         input_widget = self.query_one("#the_input", Input)
         input_widget.placeholder = f"Search (Press Enter) - Type: {self.search_type}"
-        self.notify(f"Search type: {self.search_type}")
 
     def action_quit(self) -> None:
         self.exit()
+
+    def get_commands(self) -> list[Command]:
+        return [
+            Command(
+                "Search by Callsign",
+                "Set search type to callsign",
+                self.action_set_call,
+            ),
+            Command(
+                "Search by First Name",
+                "Set search type to first name",
+                self.action_set_first,
+            ),
+            Command(
+                "Search by Last Name",
+                "Set search type to last name",
+                self.action_set_last,
+            ),
+            Command("Search by City", "Set search type to city", self.action_set_city),
+        ]
 
 
 def run_tui():
