@@ -16,12 +16,24 @@ A CLI tool and TUI (textual user interface) for searching the Swedish amateur ra
 ### Using uv (recommended)
 
 ```bash
-uv pip install -e .
+# Create virtual environment and install dependencies
+uv sync
+
+# Activate the virtual environment
+source .venv/bin/activate
+
+# Install the CLI command
+pip install -e .
 ```
 
 ### Using pip
 
 ```bash
+# Create virtual environment
+python -m venv .venv
+source .venv/bin/activate
+
+# Install dependencies and CLI
 pip install -e .
 ```
 
