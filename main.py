@@ -269,12 +269,24 @@ def has_results(html: str) -> bool:
     return False
 
 
+def is_limited(html: str) -> bool:
+    """Check if SSA indicates results are limited to 50.
+
+    Args:
+        html: HTML content from SSA callbook
+
+    Returns:
+        True if SSA shows limit message, False otherwise
+    """
+    return "Fler än 50 träffar" in html or "sökning begränsad" in html
+
+
 def search(
     call: str | None = None,
     fnamn: str | None = None,
     enamn: str | None = None,
     ort: str | None = None,
-) -> list[dict]:
+) -> tuple[list[dict], bool]:
     """Search SSA callbook for amateur radio callsigns.
 
     Args:
@@ -284,7 +296,7 @@ def search(
         ort: City/location to search for
 
     Returns:
-        List of dictionaries containing callbook entries
+        Tuple of (list of callbook entries, bool indicating if results are limited)
 
     Raises:
         ValueError: If no search parameters are provided
@@ -301,7 +313,7 @@ def search(
     if not has_results(html):
         raise NoResultsError("No results found for the given search criteria")
 
-    return parse_results(html)
+    return parse_results(html), is_limited(html)
 
 
 def get_osm_link_from_qth(result: dict) -> Optional[str]:
@@ -521,7 +533,7 @@ def main():
             if is_locator(loc_upper):
                 return loc_upper
             try:
-                results = search(call=loc_upper)
+                results, _ = search(call=loc_upper)
                 if results and results[0].get("qth_locator"):
                     return results[0]["qth_locator"]
             except Exception:
@@ -558,11 +570,11 @@ def main():
             url = build_search_url(args.call, args.first, args.last, args.city)
             console.print(f"[dim]Searching: {url}[/dim]\n")
 
-        results = search(args.call, args.first, args.last, args.city)
+        results, is_limited = search(args.call, args.first, args.last, args.city)
 
         console.print(f"[dim]Found {len(results)} result(s)[/dim]\n")
 
-        if len(results) == 50:
+        if is_limited:
             console.print(
                 f"[yellow]Note: Results are limited to 50. There may be more.[/yellow]\n"
             )

@@ -72,15 +72,16 @@ class CallbookApp(App):
 
         try:
             if self.search_type == "call":
-                results = main.search(call=query)
+                results, is_limited = main.search(call=query)
             elif self.search_type == "first":
-                results = main.search(fnamn=query)
+                results, is_limited = main.search(fnamn=query)
             elif self.search_type == "last":
-                results = main.search(enamn=query)
+                results, is_limited = main.search(enamn=query)
             elif self.search_type == "city":
-                results = main.search(ort=query)
+                results, is_limited = main.search(ort=query)
             else:
                 results = []
+                is_limited = False
 
             table = self.query_one("#results_table", DataTable)
             table.clear()
@@ -101,7 +102,7 @@ class CallbookApp(App):
                 self.notify("No results found")
             else:
                 count_msg = f"Found {len(results)} result(s)"
-                if len(results) == 50:
+                if is_limited:
                     count_msg += " (limited)"
                 self.notify(count_msg)
 
