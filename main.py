@@ -9,7 +9,7 @@ import requests
 from bs4 import BeautifulSoup
 from rich.console import Console
 from rich.table import Table
-from gridtools import Grid
+from gridtools.gridtools import Grid
 
 
 BASE_URL = "https://www.ssa.se/ssa/smcb/"
@@ -45,6 +45,20 @@ def build_search_url(
     enamn: str | None = None,
     ort: str | None = None,
 ) -> str:
+    """Build search URL for SSA callbook.
+
+    Args:
+        call: Callsign to search for
+        fnamn: First name to search for (Swedish: förnamn)
+        enamn: Last name to search for (Swedish: efternamn)
+        ort: City/location to search for (Swedish: ort)
+
+    Returns:
+        Full URL with query parameters for SSA callbook search
+
+    Raises:
+        ValueError: If no search parameters are provided
+    """
     params = {}
     if call:
         params["call"] = call.upper()
@@ -62,8 +76,25 @@ def build_search_url(
 
 
 def fetch_results(url: str) -> str:
+    """Fetch search results from SSA callbook.
+
+    Args:
+        url: Full URL to fetch
+
+    Returns:
+        HTML response text from SSA callbook
+
+    Raises:
+        NetworkError: If the request fails (timeout, connection error, HTTP error)
+    """
     try:
-        response = requests.get(url, timeout=30)
+        response = requests.get(
+            url,
+            timeout=30,
+            headers={
+                "User-Agent": "SSA-Callbook/1.0 (Contact: github.com/anomalyco/ssa_callbook)"
+            },
+        )
         response.raise_for_status()
         return response.text
     except requests.exceptions.Timeout:
@@ -75,6 +106,17 @@ def fetch_results(url: str) -> str:
 
 
 def parse_results(html: str) -> list[dict]:
+    """Parse HTML response from SSA callbook.
+
+    Args:
+        html: HTML content from SSA callbook search results
+
+    Returns:
+        List of dictionaries containing parsed callbook entries
+
+    Raises:
+        ParseError: If the HTML structure cannot be parsed
+    """
     soup = BeautifulSoup(html, "html.parser")
 
     results = []
@@ -200,6 +242,14 @@ def parse_results(html: str) -> list[dict]:
 
 
 def has_results(html: str) -> bool:
+    """Check if HTML response contains any search results.
+
+    Args:
+        html: HTML content from SSA callbook
+
+    Returns:
+        True if results are found, False otherwise
+    """
     soup = BeautifulSoup(html, "html.parser")
     content = soup.find("div", class_="entry-content")
     if not content:
@@ -225,6 +275,23 @@ def search(
     enamn: str | None = None,
     ort: str | None = None,
 ) -> list[dict]:
+    """Search SSA callbook for amateur radio callsigns.
+
+    Args:
+        call: Callsign to search for
+        fnamn: First name to search for
+        enamn: Last name to search for
+        ort: City/location to search for
+
+    Returns:
+        List of dictionaries containing callbook entries
+
+    Raises:
+        ValueError: If no search parameters are provided
+        NoResultsError: If no results are found
+        NetworkError: If the request fails
+        ParseError: If the response cannot be parsed
+    """
     if not any([call, fnamn, enamn, ort]):
         raise ValueError("At least one search parameter must be provided")
 
@@ -279,6 +346,21 @@ def get_osm_link_from_address(result: dict) -> Optional[str]:
 
 
 def calculate_distance(locator1: str, locator2: str) -> dict:
+    """Calculate distance and bearing between two Maidenhead locators.
+
+    Uses the haversine formula to calculate great-circle distance
+    between two QTH locators.
+
+    Args:
+        locator1: First Maidenhead locator (e.g., "JP94vc")
+        locator2: Second Maidenhead locator (e.g., "JP94vc")
+
+    Returns:
+        Dictionary with 'distance_km' and 'bearing' keys
+
+    Raises:
+        ValueError: If either locator is invalid
+    """
     try:
         grid1 = Grid(locator1)
         grid2 = Grid(locator2)
@@ -325,6 +407,13 @@ def format_result(
     index: int = 0,
     console: Console | None = None,
 ) -> None:
+    """Format and print a single callbook result.
+
+    Args:
+        result: Dictionary containing callbook entry data
+        index: Result index (for display purposes)
+        console: Rich Console instance (created if not provided)
+    """
     if console is None:
         console = Console()
 
@@ -387,28 +476,17 @@ def format_result(
 
 
 def main():
-    from rich import print as rprint
-
+    """CLI entry point."""
     console = Console()
 
     parser = argparse.ArgumentParser(
         description="Search SSA SM-Callbook for amateur radio callsigns",
-        formatter_class=argparse.RawDescriptionHelpFormatter,
-        epilog="""
-Examples:
-  %(prog)s --call SA2NTA
-  %(prog)s --fnamn Krister
-  %(prog)s --enamn Löfgren
-  %(prog)s --ort Stockholm
-  %(prog)s --fnamn Krister --enamn Löfgren
-  %(prog)s -c SA2NTA -f Krister -e Löfgren -o Holmsund
-        """,
     )
 
     parser.add_argument("-c", "--call", help="Callsign to search for")
-    parser.add_argument("-f", "--fnamn", help="First name to search for")
-    parser.add_argument("-e", "--enamn", help="Last name to search for")
-    parser.add_argument("-o", "--ort", help="Location/city to search for")
+    parser.add_argument("-f", "--first", dest="first", help="First name to search for")
+    parser.add_argument("-l", "--last", dest="last", help="Last name to search for")
+    parser.add_argument("-y", "--city", dest="city", help="Location/city to search for")
     parser.add_argument(
         "-v", "--verbose", action="store_true", help="Show full search URL used"
     )
@@ -435,66 +513,52 @@ Examples:
         loc1, loc2 = args.distance
 
         def is_locator(loc: str) -> bool:
-            return bool(re.match(r"^[A-Ra-r]{2}\d{2}[A-Xa-x]{0,2}$", loc))
+            return bool(re.match(r"^[A-Ra-r]{2}\d{2}([A-Xa-x]{2})?$", loc))
+
+        def get_locator(loc: str) -> str | None:
+            """Get QTH locator for a callsign or return the locator if already one."""
+            loc_upper = loc.upper()
+            if is_locator(loc_upper):
+                return loc_upper
+            try:
+                results = search(call=loc_upper)
+                if results and results[0].get("qth_locator"):
+                    return results[0]["qth_locator"]
+            except Exception:
+                pass
+            return None
 
         try:
-            if is_locator(loc1) and is_locator(loc2):
-                result = calculate_distance(loc1.upper(), loc2.upper())
-                console.print(
-                    f"[cyan]Distance:[/cyan] {result['distance_km']} km (bearing: {result['bearing']}°)"
-                )
-                sys.exit(0)
-            else:
-                loc1_upper = loc1.upper()
-                loc2_upper = loc2.upper()
+            locator1 = get_locator(loc1)
+            locator2 = get_locator(loc2)
 
-                console.print(f"[dim]Looking up {loc1_upper}...[/dim]")
-                results1 = search(call=loc1_upper)
-                if not results1:
-                    console.print(
-                        f"[red]Could not find QTH locator for {loc1_upper}[/red]"
-                    )
-                    sys.exit(1)
+            if not locator1:
+                console.print(f"[red]Could not find QTH locator for {loc1}[/red]")
+                sys.exit(1)
+            if not locator2:
+                console.print(f"[red]Could not find QTH locator for {loc2}[/red]")
+                sys.exit(1)
 
-                console.print(f"[dim]Looking up {loc2_upper}...[/dim]")
-                results2 = search(call=loc2_upper)
-                if not results2:
-                    console.print(
-                        f"[red]Could not find QTH locator for {loc2_upper}[/red]"
-                    )
-                    sys.exit(1)
-
-                r1 = results1[0]
-                r2 = results2[0]
-
-                if not r1.get("qth_locator") or not r2.get("qth_locator"):
-                    console.print(
-                        f"[red]QTH locator not found for one or both callsigns[/red]"
-                    )
-                    sys.exit(1)
-
-                result = calculate_distance(r1["qth_locator"], r2["qth_locator"])
-                console.print(
-                    f"[cyan]Distance:[/cyan] {result['distance_km']} km (bearing: {result['bearing']}°)"
-                )
-                console.print(
-                    f"[dim]From {loc1_upper} ({r1.get('name', 'N/A')}) to {loc2_upper} ({r2.get('name', 'N/A')})[/dim]"
-                )
-                sys.exit(0)
+            result = calculate_distance(locator1, locator2)
+            console.print(
+                f"[cyan]Distance:[/cyan] {result['distance_km']} km (bearing: {result['bearing']}°)"
+            )
+            console.print(f"[dim]From {loc1.upper()} to {loc2.upper()}[/dim]")
+            sys.exit(0)
         except ValueError as e:
             console.print(f"[red]Error: {e}[/red]")
             sys.exit(1)
 
-    if not any([args.call, args.fnamn, args.enamn, args.ort]):
+    if not any([args.call, args.first, args.last, args.city]):
         parser.print_help()
         sys.exit(1)
 
     try:
         if args.verbose:
-            url = build_search_url(args.call, args.fnamn, args.enamn, args.ort)
+            url = build_search_url(args.call, args.first, args.last, args.city)
             console.print(f"[dim]Searching: {url}[/dim]\n")
 
-        results = search(args.call, args.fnamn, args.enamn, args.ort)
+        results = search(args.call, args.first, args.last, args.city)
 
         for i, result in enumerate(results):
             if i > 0:

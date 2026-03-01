@@ -24,6 +24,13 @@ class CallbookApp(App):
         Binding("y", "set_city", "City"),
     ]
 
+    SEARCH_LABELS = {
+        "call": "callsign",
+        "first": "first name",
+        "last": "last name",
+        "city": "city",
+    }
+
     def __init__(self):
         super().__init__()
         self.search_type = "call"
@@ -32,12 +39,16 @@ class CallbookApp(App):
         yield Header()
         with Container(id="search_bar"):
             yield Input(
-                placeholder=f"Search (Enter) - Type: {self.search_type}",
+                placeholder=f"Search ({self.search_type_label()}) - Press Enter",
                 id="the_input",
             )
         with Container(id="results"):
             yield DataTable(id="results_table")
         yield Footer()
+
+    def search_type_label(self) -> str:
+        """Get human-readable label for current search type."""
+        return self.SEARCH_LABELS.get(self.search_type, self.search_type)
 
     def on_mount(self) -> None:
         input_widget = self.query_one("#the_input", Input)
@@ -108,13 +119,15 @@ class CallbookApp(App):
 
     def update_placeholder(self) -> None:
         input_widget = self.query_one("#the_input", Input)
-        input_widget.placeholder = f"Search (Enter) - Type: {self.search_type}"
+        input_widget.placeholder = f"Search ({self.search_type_label()}) - Press Enter"
 
-    def action_quit(self) -> None:
+    async def action_quit(self) -> None:
+        """Exit the application."""
         self.exit()
 
 
 def run_tui():
+    """Launch the interactive TUI application."""
     app = CallbookApp()
     app.run()
 

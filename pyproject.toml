@@ -1,7 +1,7 @@
 [project]
 name = "ssa-callbook"
 version = "0.1.0"
-description = "Add your description here"
+description = "SSA Callbook - Swedish amateur radio callsign lookup"
 readme = "README.md"
 requires-python = ">=3.13"
 dependencies = [
@@ -11,3 +11,10 @@ dependencies = [
     "gridtools>=1.0.0",
     "textual>=0.100.0",
 ]
+
+[tool.setuptools]
+py-modules = ["main", "tui"]
+
+[project.scripts]
+ssacall = "main:main"
+ssacall-tui = "tui:run_tui"
