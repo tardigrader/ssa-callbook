@@ -121,7 +121,19 @@ The SSA callbook does not return QTH locators for all entries. Distance calculat
 - The SSA website may be temporarily unavailable
 - Try again later
 
-## License
+## Potential Improvements
+
+The SSA callbook website returns additional data that could be supported in future versions:
+
+### Special Callsigns (Specialsignaler)
+
+SSA issues special callsigns (e.g., SM50, SM100, etc.) for events and celebrations. These are currently not parsed by this tool.
+
+### Recreational Callsigns (Fritidssignaler)
+
+When searching, SSA also returns "fritidssignaler" - temporary callsigns used at summer houses or other secondary locations. These have a different format and could be displayed separately.
+
+### License
 
 MIT License
 
