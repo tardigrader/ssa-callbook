@@ -88,9 +88,14 @@ class CallbookApp(App):
             for result in results:
                 callsign = result.get("callsign", "")
                 name = result.get("name", "")
+                postal = result.get("postal_code", "")
                 city = result.get("city", "")
+                if postal and city:
+                    city_display = f"{postal} {city}"
+                else:
+                    city_display = city
                 status = result.get("member_status", "Unknown")
-                table.add_row(callsign, name, city, status)
+                table.add_row(callsign, name, city_display, status)
 
             if not results:
                 self.notify("No results found")
