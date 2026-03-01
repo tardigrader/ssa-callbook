@@ -560,6 +560,13 @@ def main():
 
         results = search(args.call, args.first, args.last, args.city)
 
+        console.print(f"[dim]Found {len(results)} result(s)[/dim]\n")
+
+        if len(results) == 50:
+            console.print(
+                f"[yellow]Note: Results are limited to 50. There may be more.[/yellow]\n"
+            )
+
         for i, result in enumerate(results):
             if i > 0:
                 console.print()

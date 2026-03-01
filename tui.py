@@ -99,6 +99,8 @@ class CallbookApp(App):
 
             if not results:
                 self.notify("No results found")
+            elif len(results) == 50:
+                self.notify(f"Showing 50 results (limited) - there may be more")
 
         except main.NoResultsError:
             self.notify("No results found")
