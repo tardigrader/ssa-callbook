@@ -16,14 +16,8 @@ A CLI tool and TUI (textual user interface) for searching the Swedish amateur ra
 ### Using uv (recommended)
 
 ```bash
-# Create virtual environment and install dependencies
+# Create virtual environment and install dependencies (includes editable install)
 uv sync
-
-# Activate the virtual environment
-source .venv/bin/activate
-
-# Install the CLI command
-pip install -e .
 ```
 
 ### Using pip
@@ -39,38 +33,49 @@ pip install -e .
 
 ## Usage
 
-### CLI
+The CLI can be run with `uv run ssacall` (without activating) or after activating the environment:
+
+```bash
+# Without activating (using uv run)
+uv run ssacall -c SA2NTA
+
+# Or after activating
+source .venv/bin/activate
+ssacall -c SA2NTA
+```
+
+### CLI Examples
 
 ```bash
 # Search by callsign
-ssacall -c SA2NTA
+uv run ssacall -c SA2NTA
 
 # Search by first name
-ssacall -f Krister
+uv run ssacall -f Krister
 
 # Search by last name  
-ssacall -l Löfgren
+uv run ssacall -l Löfgren
 
 # Search by city
-ssacall -y Holmsund
+uv run ssacall -y Holmsund
 
 # Use wildcard (asterisk) in callsign
-ssacall -c SM7*
+uv run ssacall -c SM7*
 
 # Combined search
-ssacall -f Krister -l Löfgren
+uv run ssacall -f Krister -l Löfgren
 
 # Show full search URL
-ssacall -c SA2NTA -v
+uv run ssacall -c SA2NTA -v
 
 # Calculate distance between two callsigns
-ssacall -d SA2NTA SM5DYQ
+uv run ssacall -d SA2NTA SM5DYQ
 
 # Calculate distance between two Maidenhead locators
-ssacall -d JP94vc KP03er
+uv run ssacall -d JP94vc KP03er
 
 # Launch interactive TUI
-ssacall -t
+uv run ssacall -t
 ```
 
 ### Interactive TUI
