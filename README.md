@@ -42,6 +42,9 @@ ssacall -l Löfgren
 # Search by city
 ssacall -y Holmsund
 
+# Use wildcard (asterisk) in callsign
+ssacall -c SM7*
+
 # Combined search
 ssacall -f Krister -l Löfgren
 
@@ -83,6 +86,10 @@ Launch the TUI with `ssacall -t` or `ssacall-tui`.
 ```
 
 ## Troubleshooting
+
+### Result limit
+
+SSA limits search results to 50 entries. If there are more results, the CLI and TUI will show a warning message. Use more specific search criteria to narrow down results.
 
 ### "Could not find QTH locator" error
 
